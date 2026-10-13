@@ -126,7 +126,7 @@ After pulling new code, **restart** `run.cmd` so the server and UI match; the ap
 
 ## Using the app
 
-1. **New application** — paste the job description (or a Workday link) and press **Analyse job**. You get the match score, skills you have and are missing, and keyword coverage.
+1. **New application** — paste the job description, or a link to a Workday, Greenhouse, Lever or Ashby posting, and press **Analyse job**. You get the match score, skills you have and are missing, and keyword coverage.
 2. **Tailor resume** — Job Agent picks your strongest projects, rewrites the bullets and builds the PDF. The progress line shows each stage live.
 3. **Resume tab** — review every change next to its source, alongside the PDF preview. Press **Approve**, then **Download PDF** (or `.tex` / **Copy LaTeX** for Overleaf).
 4. **Outreach tab** — generate a referral message for LinkedIn, email or a follow-up.
@@ -255,14 +255,17 @@ Get-NetTCPConnection -LocalPort 8000 -State Listen |
 .venv\Scripts\python backend\tests\t_api.py        :: full API including the approval gate
 .venv\Scripts\python backend\tests\t_paste.py      :: pasted job description through the API
 .venv\Scripts\python backend\tests\t_stability.py  :: identical input → identical score
-.venv\Scripts\python backend\tests\t_live.py <url> :: fetch a live Workday posting end to end
+.venv\Scripts\python backend\tests\t_live.py <url> :: fetch a live posting end to end
+
+:: network only (no model calls)
+.venv\Scripts\python backend\tests\t_fetch.py      :: Greenhouse / Lever / Ashby links, closed postings
 ```
 
 `t_api`, `t_paste` and `t_live` create applications in your local database — delete them afterwards, or back up `job_agent.db` first. Leave about a minute between model-backed tests to stay within Groq's free-tier limit.
 
 ## Known limitations
 
-- **Job links:** only Workday postings can be fetched. Most other job boards render in the browser, so paste those descriptions instead.
+- **Job links:** Workday, Greenhouse, Lever and Ashby postings are fetched through their public APIs, including company career pages built on them. LinkedIn and most other sites render in the browser or block automated requests, so paste those descriptions instead.
 - **Groq free tier:** 8,000 tokens per minute and 200,000 per day. Tailoring one job uses a noticeable share; heavy use in one day can hit the daily cap.
 - **PDF engine:** Tectonic uses XeTeX while Overleaf uses pdfLaTeX. The compiled copy drops the pdfTeX-only `\input{glyphtounicode}` line and maps `★` to `$\star$`; line breaks can differ very slightly from Overleaf.
 - **LinkedIn:** there is no API for sending messages, so outreach is generated for you to copy and send.

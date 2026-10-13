@@ -45,7 +45,7 @@ export default function NewApplication({ onCreated, notify }) {
             Paste description
           </button>
           <button className={mode === "url" ? "on" : ""} onClick={() => setMode("url")}>
-            Workday link
+            Job link
           </button>
         </div>
 
@@ -72,16 +72,19 @@ export default function NewApplication({ onCreated, notify }) {
           </div>
         ) : (
           <div>
-            <label className="label">Workday posting URL</label>
+            <label className="label">Job posting link</label>
             <input
               className="input"
-              placeholder="https://company.wd1.myworkdayjobs.com/careers/job/…"
+              placeholder="https://jobs.lever.co/company/…  ·  job-boards.greenhouse.io/…  ·  jobs.ashbyhq.com/…"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
             <div className="hint">
-              Workday postings are fetched directly. LinkedIn, Greenhouse, Lever
-              and most other boards can't be fetched - paste those instead.
+              Works with <strong>Workday</strong>, <strong>Greenhouse</strong>,{" "}
+              <strong>Lever</strong> and <strong>Ashby</strong> - including
+              company career pages powered by them (links with{" "}
+              <code>gh_jid=</code> or <code>ashby_jid=</code>). LinkedIn and
+              most other sites can't be fetched - paste those instead.
             </div>
           </div>
         )}
