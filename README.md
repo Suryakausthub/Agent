@@ -1,38 +1,222 @@
 # Job Agent
 
-A referral-first job application copilot. Takes a job description and your
-master LaTeX resume, scores the match deterministically, tailors the resume
-strictly from your real background, drafts referral outreach, and blocks
-anything from leaving until every claim traces back to evidence you actually
-have.
+**A job-application copilot that tailors your resume to each job description — using only things you have actually done.**
+
+Paste a job description and Job Agent scores how well you match, picks your most relevant experience and GitHub projects, rewrites your bullets around the role, verifies every claim against your real background, and builds a one-page PDF. Nothing can be downloaded until the automated checks pass **and** you approve the changes.
+
+It runs locally: a FastAPI backend and a React UI served from one process, with [Groq](https://groq.com) as the language model and [Tectonic](https://tectonic-typesetting.github.io) to build the PDF.
 
 ---
 
-## Running it
+## Contents
+
+- [Features](#features)
+- [How it works](#how-it-works)
+- [How it stays truthful](#how-it-stays-truthful)
+- [Getting started](#getting-started)
+- [Using the app](#using-the-app)
+- [Building your project library from GitHub](#building-your-project-library-from-github)
+- [Configuration](#configuration)
+- [Project structure](#project-structure)
+- [Development](#development)
+- [Tests](#tests)
+- [Known limitations](#known-limitations)
+
+---
+
+## Features
+
+- **Match score you can trust.** Required skills, preferred skills, project relevance and qualifications, combined with fixed weights. The score is computed in code, not by the model, so the same job and resume always give the same number.
+- **ATS keyword check.** Which of the job's keywords appear in your resume, which are partial, which are missing, and whether they sit where applicant-tracking systems look first.
+- **Project library from your GitHub.** Every repository is analysed once into a structured record: what it does, architecture, a tech stack verified against the code, what is implemented versus planned, and ten candidate resume bullets.
+- **Picks your best projects for each job.** The model reviews *all* your projects (from your resume and GitHub), shortlists the ones that genuinely fit, and chooses at most three distinct bullets per project.
+- **Tailored rewriting.** Bullets are rewritten toward the job's wording without adding anything new; a rewrite that loses a skill or a metric is rejected and your original kept.
+- **Real one-page PDF.** The tailored LaTeX is compiled with Tectonic and the page count is measured. If it overflows, a fixed trim order cuts the least relevant content — never the font size or margins.
+- **Review before release.** A line-by-line diff against your original, a live PDF preview (watermarked *DRAFT* until approved), then **Download PDF** or `.tex`.
+- **Live progress.** One progress line shows the current stage and percentage while a job runs, counting through bullet rewrites one by one.
+- **Referral outreach.** LinkedIn messages, emails and follow-ups written in your voice from your real resume.
+- **Application tracker.** Status, notes and a full history for every application.
+
+## How it works
+
+```mermaid
+flowchart LR
+    JD[Job description] --> A[Extract requirements]
+    A --> S[Score match & ATS keywords]
+    S --> P[Pick projects & bullets]
+    KB[(Project library<br/>from GitHub)] --> P
+    R[main.tex<br/>your resume] --> P
+    P --> W[Rewrite bullets]
+    W --> V[Verify every claim]
+    V --> F[Build PDF & fit one page]
+    F --> H{You review<br/>and approve}
+    H --> D[Download PDF / .tex]
+```
+
+1. **Analyse** — the model extracts structured requirements from the posting; code maps them to a skill vocabulary and computes the score.
+2. **Select** — code pre-ranks every project; the model reviews the full list, shortlists, then picks up to three bullets per chosen project. The model returns ids only, and code validates each one.
+3. **Rewrite** — each selected bullet is rephrased toward the job's terminology, using only the facts already in it.
+4. **Verify** — every rewritten line is checked against your resume and project library before it can reach the page.
+5. **Fit** — the result is spliced into a copy of your `main.tex`, compiled, measured and trimmed to one page.
+6. **Approve** — you review the diff and the PDF; approval unlocks the download.
+
+## How it stays truthful
+
+Resume tools fail when they invent experience. Job Agent is built so that the model **never decides what is true** — code does:
+
+| Guardrail | What it does |
+|---|---|
+| Extract, then rewrite | Code decides what goes on the page; the model only rephrases text it is given, one bullet at a time. |
+| Number masking | Numbers are replaced with placeholders before every model call. Any digit the model writes itself is rejected. |
+| Claim whitelist | Every technology named in the output must already appear in your resume or project library — otherwise the resume is blocked. |
+| Verified project records | When the library is built, technologies not found in the repository are dropped, bullets naming them are rejected, and metrics must trace to the repository. |
+| Authorship check | Forks, downloaded archives and code owned by someone else are kept off your resume until you confirm they are yours. |
+| Two-gate release | Downloads require the automated checks to pass **and** your approval. Approval is tied to the exact content, so re-tailoring revokes it. |
+
+## Getting started
+
+### Prerequisites
+
+- **Windows** (the run script and paths assume it; the code itself is portable)
+- **Python 3.12+** from [python.org](https://www.python.org/downloads/) — not the Microsoft Store build
+- **Node.js 18+**
+- A **Groq API key** — free at [console.groq.com](https://console.groq.com)
+
+### 1. Install
+
+```cmd
+git clone https://github.com/Suryakausthub/Agent.git
+cd Agent
+python -m venv .venv
+.venv\Scripts\python -m pip install -r backend\requirements.txt
+cd frontend && npm install && cd ..
+copy .env.example .env
+```
+
+Open `.env` and set `GROQ_API_KEY`. Optionally add a read-only `GITHUB_TOKEN` (classic token, `public_repo` scope) — it lets the project library check README and authorship details for your repositories.
+
+### 2. Add your resume and profile
+
+- **`main.tex`** — put your master resume at the project root. It is not in this repository because it holds personal contact details. The parser understands the common *Jake's Resume* LaTeX template (`\resumeSubheading`, `\resumeProjectHeading`, `\resumeItem`) with sections named **Summary**, **Technical Skills**, **Experience**, **Projects** and **Education** (plus optional **Certifications & Achievements** and **Research Publications**). Your `main.tex` is only read, never modified.
+- **`backend/data/config.yaml`** — set your name, email, LinkedIn and GitHub in the `candidate:` section. These sign your referral messages.
+
+### 3. Install Tectonic (for the PDF)
+
+Tectonic is not committed (~50 MB). Download it into `tools\tectonic\`:
+
+```powershell
+New-Item -ItemType Directory -Force tools\tectonic | Out-Null
+Invoke-WebRequest "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-pc-windows-msvc.zip" -OutFile tools\tectonic\t.zip
+Expand-Archive tools\tectonic\t.zip tools\tectonic; Remove-Item tools\tectonic\t.zip
+```
+
+The first PDF build downloads the LaTeX packages it needs; later builds work offline. Without Tectonic the app still runs, but page counts are estimated and PDF download is unavailable.
+
+### 4. Run
 
 ```cmd
 run.cmd
 ```
 
-One command, one server, one port. Double-click it or run it from a terminal
-in this folder. It builds the UI if needed, frees the port if a previous run
-is still holding it, starts the server, and opens the browser at:
+Double-click it or run it from a terminal. It builds the UI if needed, frees the port if an old run is still holding it, starts the server and opens **http://localhost:8000**. Press **Ctrl+C** to stop. Use another port with `run.cmd 8123`.
 
-**http://localhost:8000**
+> Use `run.cmd`, not `run.ps1` — PowerShell's default execution policy blocks unsigned scripts.
 
-Ctrl+C in that terminal stops it. Pass a different port if 8000 is taken:
-`run.cmd 8123`
+After pulling new code, **restart** `run.cmd` so the server and UI match; the app shows a banner if they don't.
 
-> **Use `run.cmd`, not `run.ps1`.** PowerShell's default execution policy
-> (`Restricted`) blocks unsigned `.ps1` scripts. Batch files are exempt, so
-> this needs no system changes.
+## Using the app
 
-FastAPI serves both the API and the built React UI from the same process, so
-there is no second server and no proxy. API docs: http://localhost:8000/docs
+1. **New application** — paste the job description (or a Workday link) and press **Analyse job**. You get the match score, skills you have and are missing, and keyword coverage.
+2. **Tailor resume** — Job Agent picks your strongest projects, rewrites the bullets and builds the PDF. The progress line shows each stage live.
+3. **Resume tab** — review every change next to its source, alongside the PDF preview. Press **Approve**, then **Download PDF** (or `.tex` / **Copy LaTeX** for Overleaf).
+4. **Outreach tab** — generate a referral message for LinkedIn, email or a follow-up.
+5. **Activity tab** — track the application's status, keep notes and see its history.
 
-### Working on the frontend
+The **Project library** lists your analysed GitHub projects. They are used automatically; mark any project **Don't use**, or confirm a flagged one with **Use anyway**. Open a project to read its full record and edit its bullets.
 
-Only needed if you are editing the UI and want hot reload. Two terminals:
+## Building your project library from GitHub
+
+Three one-time steps, run from the project root. Each is safe to re-run and skips work already done.
+
+```cmd
+:: 1. discover your public repositories and classify them (keep / review / exclude)
+.venv\Scripts\python backend\scripts\extract_github.py --user YOUR_GITHUB_USERNAME
+
+:: 2. collect facts from each repository: manifests, README, key source files
+.venv\Scripts\python backend\scripts\harvest_evidence.py
+
+:: 3. build a verified record per repository (one model call each)
+.venv\Scripts\python backend\scripts\build_knowledge_base.py
+```
+
+Each record holds the project's description and the problem it solves, architecture and components, a categorised tech stack checked against the code, implementation details marked *implemented / partial / planned*, key contributions, **ten candidate resume bullets** with the files that support them, keywords, and any **gaps** the evidence could not settle.
+
+To pick up repositories you have pushed to since, run:
+
+```cmd
+.venv\Scripts\python backend\scripts\build_knowledge_base.py --sync
+```
+
+Groq's free tier allows 8,000 tokens per minute, so the build runs one repository about every 75 seconds. If a run stops (rate limit, network), just run it again. Your hand edits are never overwritten unless you pass `--force`.
+
+## Configuration
+
+Everything tunable lives in `backend/data/config.yaml`:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `llm.model` | `openai/gpt-oss-120b` | Groq model; `fallback_model` is used if it is unavailable. |
+| `scoring.weights` | 50 / 20 / 20 / 10 | Required skills / preferred skills / project relevance / qualifications. Must sum to 1.0. |
+| `resume.max_projects` | `3` | Projects on the page (the trim step may drop to `min_projects`). |
+| `resume.protected_sections` | Summary, Education, Certifications, Publications | Never removed to save space. |
+| `resume.trim_order` | summary → skills → project → experience bullet | What is cut first when the page overflows. |
+| `project_bank.require_approval` | `false` | `true` = only projects you approve are used. |
+| `project_bank.exclude_flagged` | `true` | Keep projects with uncertain authorship off until you confirm them. |
+| `project_bank.max_bullets_per_project` | `3` | Bullets per project on the final resume. |
+| `compile.backend` | `tectonic` | `tectonic` measures the real PDF; `stub` estimates. `fallback_to_stub` estimates if Tectonic cannot run. |
+| `candidate` | — | Your name and contact details for referral messages. |
+
+`backend/data/vocabulary.yaml` holds the skill vocabulary (111 terms with aliases and "implies" rules) used for scoring; edit it to teach the matcher new skills.
+
+## Project structure
+
+```
+Agent/
+├── run.cmd                     # one-command start (Windows)
+├── main.tex                    # your master resume (not committed)
+├── backend/
+│   ├── app/
+│   │   ├── main.py             # FastAPI routes; also serves the built UI
+│   │   ├── pipeline.py         # analyse → select → rewrite → verify → fit
+│   │   ├── db.py               # SQLite: jobs, approval gate, projects
+│   │   ├── progress.py         # live stage events (server-sent events)
+│   │   └── core/
+│   │       ├── jd_extract.py   # job description → structured requirements
+│   │       ├── scoring.py      # deterministic match score
+│   │       ├── ats.py          # keyword coverage
+│   │       ├── knowledge_base.py   # verified project records
+│   │       ├── project_select.py   # project & bullet selection
+│   │       ├── tailor.py       # bullet / summary rewriting
+│   │       ├── whitelist.py    # claim verification
+│   │       ├── render.py       # splice edits into main.tex
+│   │       ├── trim.py         # fit to one page
+│   │       ├── compile.py      # Tectonic PDF + page count
+│   │       └── llm.py          # Groq client, number masking, retries
+│   ├── data/                   # config.yaml, vocabulary.yaml
+│   ├── scripts/                # GitHub library build steps
+│   └── tests/
+└── frontend/                   # React + Vite UI
+    └── src/
+        ├── pages/              # Applications, New application, Job, Library
+        ├── tabs/               # Overview, Resume, Keywords, Outreach, Checks, Activity
+        └── components/         # progress line, shared UI
+```
+
+Interactive API docs are at **http://localhost:8000/docs** while the app is running.
+
+## Development
+
+To work on the UI with hot reload, run the backend and Vite separately:
 
 ```cmd
 cd backend
@@ -43,188 +227,43 @@ cd frontend
 npm run dev
 ```
 
-Then use **http://localhost:5173** (Vite proxies `/api` to port 8000). Note
-Vite binds to `localhost` only, not `127.0.0.1`.
+Open **http://localhost:5173** (Vite proxies `/api` to port 8000). Run `npm run build` when you are done so `run.cmd` serves your changes.
 
-Run `npm run build` when done, so `run.cmd` picks up your changes.
-
-### "Port already in use"
-
-`run.cmd` clears it automatically. To do it by hand:
+If port 8000 is stuck, `run.cmd` clears it automatically, or by hand:
 
 ```powershell
 Get-NetTCPConnection -LocalPort 8000 -State Listen |
   Select-Object -Expand OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }
 ```
 
----
-
-## First-time setup
-
-Already done in this checkout, but if you move it to another machine:
-
-```cmd
-python -m venv .venv
-.venv\Scripts\python -m pip install -r backend\requirements.txt
-cd frontend && npm install && cd ..
-copy .env.example .env
-:: then put your Groq key in .env
-```
-
-Requires Python 3.12+ (from python.org, **not** the Microsoft Store build —
-the Store version causes venv and PATH problems) and Node 18+.
-
-Two things are deliberately **not in the repository**:
-
-- **`main.tex`** — your master resume (it contains your phone number). Put
-  your own LaTeX resume at the project root as `main.tex`.
-- **Tectonic** (~50 MB) — download the Windows build and unzip it to
-  `tools\tectonic\tectonic.exe`:
-
-  ```powershell
-  New-Item -ItemType Directory -Force tools\tectonic | Out-Null
-  Invoke-WebRequest "https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%400.15.0/tectonic-0.15.0-x86_64-pc-windows-msvc.zip" -OutFile tools\tectonic\t.zip
-  Expand-Archive tools\tectonic\t.zip tools\tectonic; Remove-Item tools\tectonic\t.zip
-  ```
-
-  Without it the app still runs, but page counts are estimated and PDF
-  download is unavailable.
-
-Your local data — `.env`, `job_agent.db`, generated PDFs and caches — is
-ignored by git as well.
-
----
-
-## Using it
-
-1. **New application** — paste the job description (or a Workday link) and
-   press **Analyse job**. Analysis starts straight away: match score, skills
-   you have / are missing, ATS keyword coverage.
-2. **Tailor resume** — picks your strongest projects (from `main.tex` and your
-   GitHub library, at most 3 bullets each), rewrites bullets around the job,
-   verifies every claim, and builds a real one-page PDF.
-3. **Resume tab** — every change shown against its source, next to a live PDF
-   preview (watermarked DRAFT until you approve). **Approve**, then
-   **Download PDF** (or the `.tex` / Copy LaTeX for Overleaf).
-4. **Outreach tab** — referral message for LinkedIn, email or a follow-up.
-
-The progress line at the top of every application always shows where the
-resume is: while running, the live stage and a percentage (tailoring counts
-up bullet by bullet); otherwise how far along it is — Added, Analysed,
-Tailored, Approved.
-
-### Nothing leaves without two gates
-
-Download and send are refused unless **both** the automated checks passed
-**and** you approved the diff. Approval is bound to a content hash, so
-re-tailoring automatically revokes it — you can never approve one version and
-download another.
-
----
-
-## Configuration
-
-`backend/data/config.yaml`:
-
-| Key | What it does |
-|---|---|
-| `llm.model` | `openai/gpt-oss-120b` on Groq. `verify_models` checks at startup that both it and the fallback are reachable on your key. |
-| `scoring.weights` | 50% required skills / 20% preferred / 20% project relevance / 10% qualifications. Must sum to 1.0. |
-| `resume.protected_sections` | Never trimmed: Education, Certifications & Achievements, Research Publications. |
-| `resume.trim_order` | What gets cut first when the page overflows. |
-| `candidate` | Your name, email and standing, used to sign referral messages. |
-| `compile.backend` | `tectonic` (default: real PDF, measured page count) or `stub` (estimate). `fallback_to_stub` uses the estimate, labelled as such, if Tectonic cannot run. |
-
-`backend/data/vocabulary.yaml` — 111 skill terms with aliases and implication
-rules, hand-editable. Regenerate the starter with
-`.venv\Scripts\python backend\scripts\gen_vocabulary.py` (this overwrites
-manual edits; put lasting additions in `backend/app/core/vocab_seed.py`).
-
-Your master resume is `main.tex` in this folder. Edit it on Overleaf as usual —
-the agent parses it, never rewrites it, and splices tailored output into a copy.
-
----
-
-## Project Knowledge Base
-
-Your GitHub projects are analysed **once** and stored as structured records
-(SQLite, `projects.project_json`), so tailoring never rescans repositories.
-
-```cmd
-:: build records for every KEEP/REVIEW repo that lacks one (resumable)
-.venv\Scripts\python backend\scripts\build_knowledge_base.py
-:: later: pick up repos you pushed to since their record was built
-.venv\Scripts\python backend\scripts\build_knowledge_base.py --sync
-```
-
-Each record holds the description and problem, architecture and components,
-a categorised tech stack, implementation details marked
-implemented / partial / planned, key contributions, **ten candidate resume
-bullets** (each with a focus area and the files that support it), keywords,
-and the **gaps** the evidence could not settle. Code checks every record
-against the repository: technologies absent from the repo are dropped, bullets
-naming one are rejected, numbers survive only if they trace to a measurable
-claim in the repo, and near-duplicate bullets are removed.
-
-Every analysed project is **used automatically**. In the **Project library**
-you can mark any project *Don't use*. Projects whose authorship looks
-uncertain (a fork, a downloaded `-master` archive, a `go.mod` owned by someone
-else) stay off your resume until you press *Use anyway*
-(`project_bank.exclude_flagged`). Set `project_bank.require_approval: true` to
-go back to approving every project by hand. Hand edits are never overwritten
-by a rebuild unless you pass `--force`.
-
-Per job, the selector ranks your `main.tex` projects and approved
-knowledge-base projects together, then one model call picks the projects and
-**at most three bullets per project** (each adding a different strength). The
-model returns ids only — it cannot write text — and code validates every id,
-falling back to a code ranking if the call fails. Chosen bullets then go
-through the normal rewrite → whitelist → diff → approval path.
-
----
-
-## Known limitations
-
-- **Page count is measured with Tectonic** (`tools/tectonic/tectonic.exe`),
-  which compiles with XeTeX rather than Overleaf's pdfLaTeX. The compiled copy
-  drops the pdfTeX-only `\input{glyphtounicode}` line and maps `★` to
-  `$\star$`; `main.tex` itself is unchanged. Your master measures exactly one
-  page, matching Overleaf, but line breaks can differ very slightly between the
-  two engines. The first run downloads LaTeX packages; later runs are offline.
-- **Job postings close.** `t_live`, `t_paste` and `t_stability` default to a
-  Postman posting that has since closed; pass a current Workday URL to
-  `t_live`. `t_paste` and `t_stability` skip only their fetched-vs-pasted
-  comparison when the posting is gone.
-- **LinkedIn cannot send.** No API exists for DMs and automating it risks your
-  account. Messages are generated for you to copy and send.
-- **Scoring is sensitive to JD text changes.** Extraction is deterministic for
-  identical input, but the model segments prose into requirements differently
-  when the text changes slightly, which moves the score. Extraction is
-  therefore cached per application, so a given job's score never moves once
-  computed. Use `?force=true` on `/analyse` to deliberately re-extract.
-
----
-
 ## Tests
 
 ```cmd
 :: offline
-.venv\Scripts\python backend\tests\t_parse.py      :: LaTeX parser vs main.tex
-.venv\Scripts\python backend\tests\t_vocab.py      :: term extraction, implications
-.venv\Scripts\python backend\tests\t_pagefit.py    :: page-budget calibration (estimate)
-.venv\Scripts\python backend\tests\t_compile.py    :: Tectonic PDF, measured pages, fallback
-.venv\Scripts\python backend\tests\t_kb.py         :: knowledge base checks, selection, render, score
+.venv\Scripts\python backend\tests\t_parse.py      :: LaTeX parser against main.tex
+.venv\Scripts\python backend\tests\t_vocab.py      :: skill extraction and implications
+.venv\Scripts\python backend\tests\t_pagefit.py    :: page-estimate calibration
+.venv\Scripts\python backend\tests\t_compile.py    :: Tectonic PDF, measured pages, trim, fallback
+.venv\Scripts\python backend\tests\t_kb.py         :: project records, selection, rendering, scoring
+
 :: real model calls (a fraction of a cent each)
-.venv\Scripts\python backend\tests\t_llm.py        :: key works, number masking
-.venv\Scripts\python backend\tests\t_score.py      :: JD extraction -> score
-.venv\Scripts\python backend\tests\t_tailor.py     :: rewrite + claim check (incl. injected fake skills)
-.venv\Scripts\python backend\tests\t_render.py     :: render + trim + re-parse
-.venv\Scripts\python backend\tests\t_api.py        :: full API incl. approval gate
-.venv\Scripts\python backend\tests\t_paste.py      :: pasted JD through the API
-.venv\Scripts\python backend\tests\t_stability.py  :: identical input -> identical score
+.venv\Scripts\python backend\tests\t_llm.py        :: API key works, number masking
+.venv\Scripts\python backend\tests\t_score.py      :: job description → score
+.venv\Scripts\python backend\tests\t_tailor.py     :: rewriting + claim check (incl. injected fake skills)
+.venv\Scripts\python backend\tests\t_render.py     :: render, trim and re-parse
+.venv\Scripts\python backend\tests\t_api.py        :: full API including the approval gate
+.venv\Scripts\python backend\tests\t_paste.py      :: pasted job description through the API
+.venv\Scripts\python backend\tests\t_stability.py  :: identical input → identical score
 .venv\Scripts\python backend\tests\t_live.py <url> :: fetch a live Workday posting end to end
 ```
 
-`t_api`, `t_paste` and `t_live` create jobs in `job_agent.db`; delete them
-from the Tracker afterwards, or back the file up first. Groq's free tier allows
-8,000 tokens a minute, so leave a minute between the model-backed tests.
+`t_api`, `t_paste` and `t_live` create applications in your local database — delete them afterwards, or back up `job_agent.db` first. Leave about a minute between model-backed tests to stay within Groq's free-tier limit.
+
+## Known limitations
+
+- **Job links:** only Workday postings can be fetched. Most other job boards render in the browser, so paste those descriptions instead.
+- **Groq free tier:** 8,000 tokens per minute and 200,000 per day. Tailoring one job uses a noticeable share; heavy use in one day can hit the daily cap.
+- **PDF engine:** Tectonic uses XeTeX while Overleaf uses pdfLaTeX. The compiled copy drops the pdfTeX-only `\input{glyphtounicode}` line and maps `★` to `$\star$`; line breaks can differ very slightly from Overleaf.
+- **LinkedIn:** there is no API for sending messages, so outreach is generated for you to copy and send.
+- **Score changes with wording:** extraction is stable for identical text but can shift when the posting text changes. Each application's extraction is cached, so its score does not move once computed.
+- **GitHub project dates:** library projects appear without a date, since a repository's activity dates are not the project's dates.
