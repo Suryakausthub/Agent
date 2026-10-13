@@ -1,0 +1,71 @@
+Software Engineer (Fullstack), Collections
+Apply
+locations
+Bangalore, India
+time type
+Full time
+posted on
+Posted 3 Days Ago
+job requisition id
+JR1000043
+Who Are We?
+
+Postman is the world's leading API platform, used by more than 45 million+ developers and 500,000 organizations, including 98% of the Fortune 500. Postman is helping developers and professionals across the globe build the API-first world by simplifying each step of the API lifecycle and streamlining collaboration—enabling users to create better APIs, faster.
+
+The company is headquartered in San Francisco and has offices in Boston, New York, Austin, Tokyo, London, and Bangalore - where Postman was founded. Postman is privately held, with funding from Battery Ventures, BOND, Coatue, CRV, Insight Partners, and Nexus Venture Partners. Learn more at postman.com or connect with Postman on X via @getpostman.
+
+P.S: We highly recommend reading The "API-First World" graphic novel to understand the bigger picture and our vision at Postman.
+
+
+About Us
+
+The Collections team owns some of the most foundational features of the Postman platform like Collections, Documentation, and Version Control. These are the building blocks that developers around the world rely on every day to design, test, and deploy APIs. The services powering these features operate at massive scale, and with that scale comes a constant stream of hard engineering problems, from data consistency and storage efficiency to system reliability and performance under heavy load. In addition, the team works on evolving the product through new features shaped by real user needs.
+
+
+The Role
+
+We're looking for a Software Engineer who is energized by the challenges that come with scale. If you enjoy solving complex problems that don't have easy answers, have a bias for action, and want to help shape how a high-scale platform is engineered end to end, this role is for you. You'll also help shape where the product goes next, building experiences used by millions of developers.
+
+
+What You'll Do
+
+Own and build secure, performant, and scalable end-to-end experiences for Postman, tackling day-to-day challenges around scale, performance, and reliability.
+Work with agility. Move quickly, make pragmatic trade-offs, and iterate fast to deliver incremental improvements.
+Improve quality and reliability by strengthening test pipelines, and proactively addressing bottlenecks and technical debt.
+Collaborate closely with engineers, designers, and product managers to deliver solutions that meet both technical and user needs.
+Help define and drive engineering best practices including code quality, system design standards, and operational excellence, while contributing to the engineering culture through knowledge sharing, code reviews, and mentoring peers.
+Contribute to new features and product improvements driven by user needs and innovation, including quickly building functional prototypes for internal and external use-cases.
+
+What We're Looking For
+
+2-4 years of experience, with a track record of building and shipping features at scale.
+Proficiency in JavaScript/TypeScript, Node.js and databases (SQL/NoSQL) which preferably includes query optimization and schema design.
+Strong Computer Science fundamentals - algorithms, networking, and operating systems, along with a genuine curiosity for solving scale-related challenges.
+A strong sense of ownership and agility. You see problems through from design to production and get things done even under ambiguity or constraints.
+A collaborative mindset. You communicate well, work confidently across teams, and can challenge stakeholders like PMs and EMs when needed.
+An appreciation for product thinking. You love translating user needs into technical solutions and building things that create real value for users.
+A commitment to writing testable, maintainable code, paired with a curiosity to learn new things and explore beyond silos.
+
+Why Join Us?
+
+Build for millions. Work on a high-velocity team shaping the systems that power Postman for developers around the world.
+Solve problems that actually matter. Scale, reliability, distributed systems - every day brings a new challenge worth sinking your teeth into.
+Own it, end to end. Be part of a culture that values curiosity, ownership, trust, and winning together, even under constraints.
+We've got you covered. Competitive salary and benefits, a flexible schedule, and real room to grow.
+
+What Else?
+
+In addition to Postman's pay-on-performance philosophy, and a flexible schedule working with a fun, collaborative team, Postman offers a comprehensive set of benefits, including full medical coverage, flexible PTO, wellness reimbursement, and a monthly lunch stipend. Along with that, our wellness programs will help you stay in the best of your physical and mental health. Our frequent and fascinating team-building events will keep you connected, while our donation-matching program can support the causes you care about. We're building a long-term company with an inclusive culture where everyone can be the best version of themselves.
+
+
+At Postman we value in person collaboration. We are in office 5 days a week for all roles based out of our hubs in San Francisco Bay Area, Boston, Austin, New York City, Tokyo and London. For roles based in Bangalore, employees currently work in the office three days a week and will transition to five days per week by the end of the year. We were thoughtful in our approach which is based on collaboration and grounded in feedback from our workforce, leadership team, and peers. The benefits of our in office model will be shared knowledge, brainstorming sessions, communication, and building trust in-person that cannot be replicated via zoom.
+
+
+Our Values
+
+At Postman, we create with the same curiosity that we see in our users. We value transparency and honest communication about not only successes, but also failures. In our work, we focus on specific goals that add up to a larger vision. Our inclusive work culture ensures that everyone is valued equally as important pieces of our final product. We are dedicated to delivering the best products we can.
+
+
+Equal Opportunity
+
+Postman is an Equal Employment Opportunity and Affirmative Action Employer. Qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender perception or identity, national origin, age, marital status, protected veteran status, or disability status. Headhunters and recruitment agencies may not submit resumes/CVs through this website or directly to managers. Postman does not accept unsolicited headhunter and agency resumes. Postman will not pay fees to any third-party agency or company that does not have a signed agreement with Postman.

@@ -1,0 +1,22 @@
+Software Development Engineer I - Backend Platform
+Acme Systems | Bengaluru, India | Full-time | Job ID: ACM-2291
+
+About the role:
+You will build and operate scalable backend services powering our payments platform.
+
+Basic qualifications:
+- Bachelor's degree in Computer Science or related field, graduating 2026
+- Strong programming skills in Java or Kotlin
+- Experience building RESTful microservices with Spring Boot
+- Solid grounding in data structures and algorithms
+- Working knowledge of relational databases such as Postgres or MySQL
+- Comfortable with Git and CI/CD pipelines
+
+Preferred qualifications:
+- Exposure to Kafka or other event-driven architectures
+- Familiarity with Docker and Kubernetes
+- Experience with query tuning and performance optimisation
+- Prior internship experience in a product company
+- Excellent written and verbal communication skills
+
+We are an equal opportunity employer.

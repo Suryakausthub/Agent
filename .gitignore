@@ -1,0 +1,40 @@
+# Secrets - never commit
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Cached GitHub API responses - no credentials, but bulky and re-fetchable
+backend/data/github_cache/
+# Harvested repository contents (re-fetchable with scripts/harvest_evidence.py)
+backend/data/evidence_cache/
+
+# Personal: the master resume contains a phone number, and this repository is
+# public. Keep your own main.tex locally (see README).
+main.tex
+
+# Tectonic binary (~50 MB) - download it, see README
+tools/
+
+# Application data
+job_agent.db
+output/
+*.pdf
+*.aux
+*.log
+*.out
+*.xdv
+
+# Node / frontend
+node_modules/
+dist/
+build/
+
+# Editor
+.vscode/
+.idea/

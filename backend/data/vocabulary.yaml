@@ -1,0 +1,1024 @@
+version: 1
+_note: Auto-generated starter, safe to hand-edit. Aliases must be lowercase. Longest alias wins.
+terms:
+  agile:
+    canonical: Agile
+    category: practice
+    aliases:
+    - agile
+    - scrum
+    - kanban
+    - sprint
+    - agile development
+    source: seed
+  airflow:
+    canonical: Airflow
+    category: tool
+    aliases:
+    - airflow
+    - apache airflow
+    source: seed
+  android:
+    canonical: Android
+    category: platform
+    aliases:
+    - android
+    - kotlin android
+    source: seed
+  angular:
+    canonical: Angular
+    category: framework
+    aliases:
+    - angular
+    - angularjs
+    source: seed
+  appium:
+    canonical: Appium
+    category: tool
+    aliases:
+    - appium
+    source: seed
+  aws:
+    canonical: AWS
+    category: platform
+    aliases:
+    - aws
+    - amazon web services
+    - ec2
+    - s3
+    - lambda
+    source: seed
+  azure:
+    canonical: Azure
+    category: platform
+    aliases:
+    - azure
+    - microsoft azure
+    source: seed
+  bash:
+    canonical: Shell Scripting
+    category: language
+    aliases:
+    - bash
+    - shell scripting
+    - shell script
+    - sh
+    source: seed
+  c:
+    canonical: C
+    category: language
+    aliases:
+    - c language
+    - ansi c
+    source: seed
+  caching:
+    canonical: Caching
+    category: concept
+    aliases:
+    - caching
+    - cache
+    source: seed
+  cassandra:
+    canonical: Cassandra
+    category: database
+    aliases:
+    - cassandra
+    source: seed
+  ci_cd:
+    canonical: CI/CD
+    category: practice
+    aliases:
+    - ci/cd
+    - ci cd
+    - cicd
+    - continuous integration
+    - continuous delivery
+    - continuous deployment
+    - ci
+    source: seed
+  code_quality:
+    canonical: Code Quality
+    category: practice
+    aliases:
+    - code quality
+    - code review
+    - clean code
+    - refactoring
+    source: seed
+  competitive_programming:
+    canonical: Competitive Programming
+    category: concept
+    aliases:
+    - competitive programming
+    - icpc
+    - codeforces
+    - codechef
+    - leetcode
+    - acm icpc
+    source: seed
+  complexity:
+    canonical: Complexity Analysis
+    category: concept
+    aliases:
+    - complexity analysis
+    - time complexity
+    - space complexity
+    - big o
+    source: seed
+  concurrency:
+    canonical: Concurrency
+    category: concept
+    aliases:
+    - concurrency
+    - concurrent
+    - multithreading
+    - multi-threading
+    - threading
+    - async
+    - asynchronous
+    - asynchronously
+    - parallelism
+    source: seed
+  cpp:
+    canonical: C++
+    category: language
+    aliases:
+    - c++
+    - cpp
+    - c plus plus
+    source: seed
+  csharp:
+    canonical: C#
+    category: language
+    aliases:
+    - c#
+    - csharp
+    - c sharp
+    - .net
+    - dotnet
+    source: seed
+  cucumber:
+    canonical: Cucumber
+    category: tool
+    aliases:
+    - cucumber
+    - gherkin
+    - bdd
+    source: seed
+  cypress:
+    canonical: Cypress
+    category: tool
+    aliases:
+    - cypress
+    source: seed
+  data_modeling:
+    canonical: Data Modeling
+    category: concept
+    aliases:
+    - data modeling
+    - data modelling
+    - schema design
+    source: seed
+  data_warehouse:
+    canonical: Data Warehousing
+    category: concept
+    aliases:
+    - data warehouse
+    - data warehousing
+    - snowflake
+    - redshift
+    - bigquery
+    source: seed
+  dbms:
+    canonical: DBMS
+    category: concept
+    aliases:
+    - dbms
+    - database management systems
+    source: seed
+  debugging:
+    canonical: Debugging
+    category: practice
+    aliases:
+    - debugging
+    - troubleshooting
+    - root cause analysis
+    source: seed
+  distributed_systems:
+    canonical: Distributed Systems
+    category: concept
+    aliases:
+    - distributed systems
+    - distributed system
+    - distributed computing
+    source: seed
+  django:
+    canonical: Django
+    category: framework
+    aliases:
+    - django
+    source: seed
+  docker:
+    canonical: Docker
+    category: tool
+    aliases:
+    - docker
+    - containerization
+    - containers
+    - containerized
+    source: seed
+  documentation:
+    canonical: Documentation
+    category: practice
+    aliases:
+    - documentation
+    - technical writing
+    source: seed
+  dsa:
+    canonical: Data Structures & Algorithms
+    category: concept
+    aliases:
+    - data structures & algorithms
+    - data structures and algorithms
+    - data structures
+    - algorithms
+    - dsa
+    source: seed
+  dynamodb:
+    canonical: DynamoDB
+    category: database
+    aliases:
+    - dynamodb
+    - dynamo db
+    source: seed
+  elasticsearch:
+    canonical: Elasticsearch
+    category: database
+    aliases:
+    - elasticsearch
+    - elastic search
+    - elk
+    source: seed
+  etl:
+    canonical: ETL
+    category: concept
+    aliases:
+    - etl
+    - elt
+    - data pipeline
+    - data pipelines
+    - data processing pipeline
+    source: seed
+  event_driven:
+    canonical: Event-Driven Architecture
+    category: concept
+    aliases:
+    - event-driven architecture
+    - event driven architecture
+    - event-driven
+    - event driven
+    - eda
+    source: seed
+  express:
+    canonical: Express
+    category: framework
+    aliases:
+    - express.js
+    - expressjs
+    - express
+    source: seed
+  fastapi:
+    canonical: FastAPI
+    category: framework
+    aliases:
+    - fastapi
+    - fast api
+    source: seed
+  flask:
+    canonical: Flask
+    category: framework
+    aliases:
+    - flask
+    source: seed
+  gcp:
+    canonical: GCP
+    category: platform
+    aliases:
+    - gcp
+    - google cloud
+    - google cloud platform
+    source: seed
+  git:
+    canonical: Git
+    category: tool
+    aliases:
+    - git
+    - github
+    - gitlab
+    - bitbucket
+    - version control
+    source: seed
+  go:
+    canonical: Go
+    category: language
+    aliases:
+    - golang
+    - go lang
+    source: seed
+  graphite:
+    canonical: Datadog
+    category: tool
+    aliases:
+    - datadog
+    - splunk
+    - new relic
+    source: seed
+  graphql:
+    canonical: GraphQL
+    category: concept
+    aliases:
+    - graphql
+    source: seed
+  grpc:
+    canonical: gRPC
+    category: concept
+    aliases:
+    - grpc
+    source: seed
+  hadoop:
+    canonical: Hadoop
+    category: platform
+    aliases:
+    - hadoop
+    - hdfs
+    - mapreduce
+    - map reduce
+    source: seed
+  hibernate:
+    canonical: Hibernate
+    category: framework
+    aliases:
+    - hibernate
+    - jpa
+    - java persistence api
+    source: seed
+  java:
+    canonical: Java
+    category: language
+    aliases:
+    - java
+    - core java
+    - java se
+    - java 8
+    - java 11
+    - java 17
+    source: seed
+  javascript:
+    canonical: JavaScript
+    category: language
+    aliases:
+    - javascript
+    - js
+    - es6
+    - ecmascript
+    source: seed
+  jenkins:
+    canonical: Jenkins
+    category: tool
+    aliases:
+    - jenkins
+    source: seed
+  jmeter:
+    canonical: JMeter
+    category: tool
+    aliases:
+    - jmeter
+    - load testing
+    - performance testing
+    source: seed
+  junit:
+    canonical: JUnit
+    category: tool
+    aliases:
+    - junit
+    - testng
+    - mockito
+    source: seed
+  kafka:
+    canonical: Kafka
+    category: platform
+    aliases:
+    - kafka
+    - apache kafka
+    source: seed
+  kotlin:
+    canonical: Kotlin
+    category: language
+    aliases:
+    - kotlin
+    source: seed
+  kubernetes:
+    canonical: Kubernetes
+    category: tool
+    aliases:
+    - kubernetes
+    - k8s
+    - kube
+    source: seed
+  langchain:
+    canonical: LangChain
+    category: framework
+    aliases:
+    - langchain
+    - lang chain
+    source: seed
+  langgraph:
+    canonical: LangGraph
+    category: framework
+    aliases:
+    - langgraph
+    - lang graph
+    source: seed
+  linux:
+    canonical: Linux
+    category: platform
+    aliases:
+    - linux
+    - unix
+    - ubuntu
+    - centos
+    source: seed
+  llm:
+    canonical: LLMs
+    category: concept
+    aliases:
+    - llm
+    - llms
+    - large language model
+    - large language models
+    - generative ai
+    - genai
+    source: seed
+  logging:
+    canonical: Logging & Monitoring
+    category: practice
+    aliases:
+    - logging
+    - structured logging
+    - monitoring
+    - observability
+    - prometheus
+    - grafana
+    source: seed
+  machine_learning:
+    canonical: Machine Learning
+    category: concept
+    aliases:
+    - machine learning
+    - ml
+    - deep learning
+    source: seed
+  microservices:
+    canonical: Microservices
+    category: concept
+    aliases:
+    - microservice
+    - microservices
+    - micro service
+    source: seed
+  mongodb:
+    canonical: MongoDB
+    category: database
+    aliases:
+    - mongodb
+    - mongo
+    - mongo db
+    source: seed
+  mysql:
+    canonical: MySQL
+    category: database
+    aliases:
+    - mysql
+    - my sql
+    source: seed
+  networking:
+    canonical: Computer Networks
+    category: concept
+    aliases:
+    - computer networks
+    - networking
+    - tcp/ip
+    source: seed
+  nlp:
+    canonical: NLP
+    category: concept
+    aliases:
+    - nlp
+    - natural language processing
+    source: seed
+  node:
+    canonical: Node.js
+    category: framework
+    aliases:
+    - node.js
+    - nodejs
+    - node js
+    - node
+    source: seed
+  nosql:
+    canonical: NoSQL
+    category: database
+    aliases:
+    - nosql
+    - no sql
+    - non-relational
+    source: seed
+  oop:
+    canonical: OOP
+    category: concept
+    aliases:
+    - oop
+    - oops
+    - object oriented programming
+    - object-oriented programming
+    - object oriented design
+    source: seed
+  openshift:
+    canonical: OpenShift
+    category: platform
+    aliases:
+    - openshift
+    - open shift
+    - red hat openshift
+    source: seed
+  os:
+    canonical: Operating Systems
+    category: concept
+    aliases:
+    - operating systems
+    - operating system
+    - os
+    source: seed
+  pandas:
+    canonical: pandas
+    category: framework
+    aliases:
+    - pandas
+    - numpy
+    source: seed
+  partitioning:
+    canonical: Partitioning
+    category: concept
+    aliases:
+    - partitioning
+    - partitioned
+    - sharding
+    source: seed
+  performance:
+    canonical: Performance Optimization
+    category: concept
+    aliases:
+    - performance optimization
+    - performance optimisation
+    - performance tuning
+    - profiling
+    - latency optimization
+    - throughput
+    source: seed
+  php:
+    canonical: PHP
+    category: language
+    aliases:
+    - php
+    - laravel
+    source: seed
+  playwright:
+    canonical: Playwright
+    category: tool
+    aliases:
+    - playwright
+    source: seed
+  postgresql:
+    canonical: PostgreSQL
+    category: database
+    aliases:
+    - postgresql
+    - postgres
+    - psql
+    - postgre sql
+    source: seed
+  postman:
+    canonical: Postman
+    category: tool
+    aliases:
+    - postman
+    - api testing
+    source: seed
+  process_management:
+    canonical: Process Management
+    category: concept
+    aliases:
+    - process management
+    source: resume
+  prompt_engineering:
+    canonical: Prompt Engineering
+    category: concept
+    aliases:
+    - prompt engineering
+    - prompting
+    source: seed
+  pubsub:
+    canonical: Pub/Sub
+    category: concept
+    aliases:
+    - pub/sub
+    - pubsub
+    - publish subscribe
+    source: seed
+  pyspark:
+    canonical: PySpark
+    category: platform
+    aliases:
+    - pyspark
+    - py spark
+    source: seed
+  python:
+    canonical: Python
+    category: language
+    aliases:
+    - python
+    - python3
+    - py
+    source: seed
+  pytorch:
+    canonical: PyTorch
+    category: framework
+    aliases:
+    - pytorch
+    - torch
+    source: seed
+  rabbitmq:
+    canonical: RabbitMQ
+    category: platform
+    aliases:
+    - rabbitmq
+    - rabbit mq
+    source: seed
+  rag:
+    canonical: RAG
+    category: concept
+    aliases:
+    - rag
+    - retrieval augmented generation
+    - retrieval-augmented generation
+    - document retrieval
+    source: seed
+  rdbms:
+    canonical: Relational Databases
+    category: database
+    aliases:
+    - relational database
+    - relational databases
+    - rdbms
+    - relational data
+    source: seed
+  react:
+    canonical: React
+    category: framework
+    aliases:
+    - react
+    - react.js
+    - reactjs
+    source: seed
+  redis:
+    canonical: Redis
+    category: database
+    aliases:
+    - redis
+    source: seed
+  rest:
+    canonical: REST APIs
+    category: concept
+    aliases:
+    - rest api
+    - rest apis
+    - restful
+    - rest
+    - restful api
+    source: seed
+  ruby:
+    canonical: Ruby
+    category: language
+    aliases:
+    - ruby
+    - rails
+    - ruby on rails
+    source: seed
+  rust:
+    canonical: Rust
+    category: language
+    aliases:
+    - rust
+    source: seed
+  salesforce:
+    canonical: Salesforce
+    category: platform
+    aliases:
+    - salesforce
+    - apex
+    source: seed
+  sap:
+    canonical: SAP
+    category: platform
+    aliases:
+    - sap
+    - abap
+    source: seed
+  scala:
+    canonical: Scala
+    category: language
+    aliases:
+    - scala
+    source: seed
+  scalability:
+    canonical: Scalability
+    category: concept
+    aliases:
+    - scalability
+    - scalable
+    - scaling
+    source: seed
+  sdlc:
+    canonical: SDLC
+    category: practice
+    aliases:
+    - sdlc
+    - software development lifecycle
+    - software development life cycle
+    source: seed
+  selenium:
+    canonical: Selenium
+    category: tool
+    aliases:
+    - selenium
+    - selenium webdriver
+    - webdriver
+    source: seed
+  sklearn:
+    canonical: scikit-learn
+    category: framework
+    aliases:
+    - scikit-learn
+    - sklearn
+    - scikit learn
+    source: seed
+  spark:
+    canonical: Apache Spark
+    category: platform
+    aliases:
+    - apache spark
+    - spark
+    source: seed
+  spring:
+    canonical: Spring Framework
+    category: framework
+    aliases:
+    - spring framework
+    - spring mvc
+    - spring
+    source: seed
+  spring_boot:
+    canonical: Spring Boot
+    category: framework
+    aliases:
+    - spring boot
+    - springboot
+    - spring-boot
+    source: seed
+  sql:
+    canonical: SQL
+    category: language
+    aliases:
+    - sql
+    - ansi sql
+    source: seed
+  sql_optimization:
+    canonical: SQL Query Optimization
+    category: concept
+    aliases:
+    - sql query optimization
+    - query optimization
+    - query tuning
+    - indexing
+    - database optimization
+    source: seed
+  sqs:
+    canonical: SQS
+    category: platform
+    aliases:
+    - sqs
+    - amazon sqs
+    source: seed
+  swift:
+    canonical: Swift
+    category: language
+    aliases:
+    - swift
+    - ios
+    source: seed
+  system_design:
+    canonical: System Design
+    category: concept
+    aliases:
+    - system design
+    - software design
+    - hld
+    - lld
+    source: seed
+  tableau:
+    canonical: Tableau
+    category: tool
+    aliases:
+    - tableau
+    - power bi
+    - powerbi
+    source: seed
+  tensorflow:
+    canonical: TensorFlow
+    category: framework
+    aliases:
+    - tensorflow
+    - tf
+    - keras
+    source: seed
+  terraform:
+    canonical: Terraform
+    category: tool
+    aliases:
+    - terraform
+    - iac
+    - infrastructure as code
+    source: seed
+  testing:
+    canonical: Testing
+    category: practice
+    aliases:
+    - testing
+    - unit testing
+    - integration testing
+    - test automation
+    source: seed
+  typescript:
+    canonical: TypeScript
+    category: language
+    aliases:
+    - typescript
+    - ts
+    source: seed
+  vector_db:
+    canonical: Vector Databases
+    category: database
+    aliases:
+    - vector database
+    - vector databases
+    - vector db
+    - pinecone
+    - weaviate
+    - faiss
+    - chroma
+    - qdrant
+    source: seed
+  vue:
+    canonical: Vue
+    category: framework
+    aliases:
+    - vue
+    - vue.js
+    - vuejs
+    source: seed
+implies:
+  ci_cd:
+  - term: git
+    strength: 0.4
+  competitive_programming:
+  - term: dsa
+    strength: 0.85
+  - term: complexity
+    strength: 0.7
+  django:
+  - term: python
+    strength: 0.9
+  event_driven:
+  - term: distributed_systems
+    strength: 0.5
+  fastapi:
+  - term: python
+    strength: 0.9
+  - term: rest
+    strength: 0.8
+  flask:
+  - term: python
+    strength: 0.9
+  - term: rest
+    strength: 0.6
+  hadoop:
+  - term: distributed_systems
+    strength: 0.6
+  - term: etl
+    strength: 0.5
+  hibernate:
+  - term: java
+    strength: 0.7
+  - term: sql
+    strength: 0.5
+  jenkins:
+  - term: ci_cd
+    strength: 0.8
+  junit:
+  - term: testing
+    strength: 0.9
+  - term: java
+    strength: 0.5
+  kafka:
+  - term: event_driven
+    strength: 0.8
+  - term: distributed_systems
+    strength: 0.7
+  - term: pubsub
+    strength: 0.8
+  kubernetes:
+  - term: docker
+    strength: 0.7
+  langchain:
+  - term: python
+    strength: 0.7
+  - term: llm
+    strength: 0.8
+  - term: rag
+    strength: 0.6
+  langgraph:
+  - term: python
+    strength: 0.7
+  - term: llm
+    strength: 0.8
+  microservices:
+  - term: distributed_systems
+    strength: 0.5
+  - term: rest
+    strength: 0.5
+  mysql:
+  - term: sql
+    strength: 0.9
+  - term: dbms
+    strength: 0.7
+  - term: rdbms
+    strength: 0.95
+  openshift:
+  - term: kubernetes
+    strength: 0.8
+  - term: docker
+    strength: 0.7
+  postgresql:
+  - term: sql
+    strength: 0.9
+  - term: dbms
+    strength: 0.7
+  - term: rdbms
+    strength: 0.95
+  pyspark:
+  - term: python
+    strength: 0.8
+  - term: spark
+    strength: 0.95
+  - term: distributed_systems
+    strength: 0.6
+  - term: etl
+    strength: 0.7
+  redis:
+  - term: caching
+    strength: 0.8
+  spark:
+  - term: distributed_systems
+    strength: 0.6
+  - term: etl
+    strength: 0.6
+  spring:
+  - term: java
+    strength: 0.9
+  spring_boot:
+  - term: java
+    strength: 0.9
+  - term: rest
+    strength: 0.7
+  - term: microservices
+    strength: 0.5
+  sql_optimization:
+  - term: sql
+    strength: 0.8
+  - term: dbms
+    strength: 0.6
+  - term: performance
+    strength: 0.7
+  vector_db:
+  - term: rag
+    strength: 0.7
