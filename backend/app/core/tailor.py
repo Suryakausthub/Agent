@@ -17,6 +17,7 @@ Ordering is also code: the model never decides what is dropped.
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
 
@@ -55,6 +56,8 @@ class TailorResult:
     rejected: list[tuple[str, str, str]] = field(default_factory=list)
     tokens_in: int = 0
     tokens_out: int = 0
+    warnings: list[str] = field(default_factory=list)
+    calls: int = 0                 # model calls made by the rewrite step
 
 
 # --------------------------------------------------------------------- step A
@@ -270,70 +273,186 @@ def _user_prompt(bullet_text: str, jd_terms: list[str]) -> str:
 
 def rewrite(p: TailorPlan, jd: JobDescription, llm: LLM,
             vocab: Vocabulary, cfg: dict, on_bullet=None) -> TailorResult:
-    """Model rewrites retrieved text only, one bullet per call.
+    """Model rewrites retrieved text only, many bullets per call.
 
-    `on_bullet(index, total, bullet_id, outcome)` is called after each bullet
-    so the UI can show which one is being worked on. This stage is the bulk of
-    the wall-clock time -- one network round trip per bullet -- and without
-    per-bullet reporting it reads as a single unexplained 25-second pause.
+    Bullets are sent in batches (tailoring.batch_size, default 20 -- one call
+    for a normal resume). One call per bullet made tailoring take about two
+    minutes and burst through Groq's tokens-per-minute limit; batching keeps
+    every safeguard, because each returned line is still checked on its own:
+
+      * numbers are masked PER BULLET, so a placeholder that turns up in a
+        different bullet is caught as a moved number, not silently accepted;
+      * any digit the model writes itself rejects that line;
+      * accept_rewrite and, later, the whitelist run on every line.
+
+    A line that fails keeps the candidate's original wording. If a whole batch
+    call fails, that batch falls back to one call per bullet.
+
+    `on_bullet(index, total, bullet_id, outcome)` reports progress per line.
     """
     out = TailorResult(plan=p)
     jd_keys = jd.all_keys() | set(jd.ats_terms)
     total = len(p.bullets)
+    size = max(1, int(cfg.get("tailoring", {}).get("batch_size", 20)))
 
-    for idx, rb in enumerate(p.bullets, start=1):
-        b = rb.bullet
-        if on_bullet:
-            on_bullet(idx, total, b.id, "start")
-        # ONLY the JD terms this bullet already demonstrates.
-        #
-        # Passing the full JD vocabulary was measurably harmful: it took the
-        # run from 0 to 2 hallucinations, both MySQL, which the model pulled
-        # from a "Postgres or MySQL" requirement and inserted into a bullet
-        # about generic SQL. Offering a term the candidate does not have is
-        # offering it as material. Retrieved context must contain only what is
-        # already supported -- that is the whole point of extract-then-rewrite
-        # (spec 15.1), and widening it quietly reopens the hole.
-        terms = rb.matched
+    for start in range(0, total, size):
+        chunk = p.bullets[start:start + size]
         try:
-            res = llm.rewrite_masked(
-                _SYSTEM, _user_prompt(b.text, terms),
-                effort=cfg["llm"].get("reasoning_effort", "low"),
-            )
-        except HallucinatedNumber as e:
-            # Hard block, never a silent fallback to the model's text.
-            out.skipped.append((b.id, "number guard: %s" % e))
-            if on_bullet:
-                on_bullet(idx, total, b.id, "blocked")
-            continue
-        except LLMError as e:
-            out.skipped.append((b.id, "llm error: %s" % e))
-            if on_bullet:
-                on_bullet(idx, total, b.id, "error")
-            continue
-
-        text = sanitise_latex(res.text.strip().strip('"').strip(), b.text)
-        out.tokens_in += res.prompt_tokens
-        out.tokens_out += res.completion_tokens
-
-        if not text:
-            out.skipped.append((b.id, "empty response"))
-            if on_bullet:
-                on_bullet(idx, total, b.id, "empty")
-            continue
-
-        ok, why = accept_rewrite(b.text, text, jd_keys, vocab)
-        if on_bullet:
-            on_bullet(idx, total, b.id, "kept" if ok else "rejected")
-        if not ok:
-            # Keep the candidate's own wording. A rejected rewrite is a normal
-            # outcome, not an error: the master resume is already decent prose.
-            out.rejected.append((b.id, why, text))
-            continue
-
-        out.rewritten[b.id] = text
-
+            _rewrite_batch(chunk, start, total, jd_keys, llm, vocab, cfg, out,
+                           on_bullet)
+        except (LLMError, ValueError) as e:
+            out.warnings.append("batch rewrite failed (%s) - rewriting one "
+                                "bullet at a time" % str(e)[:120])
+            for j, rb in enumerate(chunk, start=start + 1):
+                _rewrite_single(rb, j, total, jd_keys, llm, vocab, cfg, out,
+                                on_bullet)
     return out
+
+
+_BATCH_SYSTEM = """You rewrite resume bullets for emphasis and clarity. You \
+receive several bullets; treat each one completely independently.
+
+Absolute rules, for EACH bullet:
+- Use ONLY facts, technologies, tools and claims already present in THAT \
+bullet. You may reorder, tighten and rephrase.
+- Never move anything between bullets, and never add a technology, tool, \
+framework, company, metric or achievement that is not already in that bullet. \
+If a target term does not fit the bullet's actual content, leave it out.
+- Tokens like <N0> are opaque placeholders. Reproduce each bullet's own \
+placeholders exactly. Never write a digit yourself.
+- One line, no longer than the original, starting with a strong past-tense \
+verb such as Built, Developed, Designed, Implemented, Engineered, Optimized, \
+Automated, Debugged or Integrated. Never open with Ensured, Helped, Assisted, \
+Worked on, Supported, Handled or Was responsible for.
+- If a bullet is already clear and well-phrased, return it EXACTLY as given. \
+An unnecessary reword is worse than no change.
+
+Return every bullet id exactly once, with its rewritten text."""
+
+_BATCH_SCHEMA = {
+    "type": "object", "additionalProperties": False, "required": ["bullets"],
+    "properties": {"bullets": {"type": "array", "items": {
+        "type": "object", "additionalProperties": False,
+        "required": ["id", "text"],
+        "properties": {"id": {"type": "string"}, "text": {"type": "string"}}}}},
+}
+
+_PLACEHOLDER = re.compile(r"<N\d+>")
+
+
+def _rewrite_batch(chunk, offset, total, jd_keys, llm, vocab, cfg, out,
+                   on_bullet) -> None:
+    from .llm import _NUM_RE           # same number pattern the guard uses
+
+    counter = [0]
+    items = []                          # (label, rb, own placeholder map)
+    lines = []
+    for n, rb in enumerate(chunk, start=1):
+        mapping: dict[str, str] = {}
+
+        def mask(m, mapping=mapping):
+            key = "<N%d>" % counter[0]
+            counter[0] += 1
+            mapping[key] = m.group(0)
+            return key
+
+        masked = _NUM_RE.sub(mask, rb.bullet.text)
+        label = "b%d" % n
+        items.append((label, rb, mapping))
+        # ONLY the JD terms this bullet already demonstrates. Offering the
+        # whole JD vocabulary once put MySQL into a bullet about generic SQL.
+        lines.append("[%s]\nbullet: %s\njob terms it already shows: %s"
+                     % (label, masked, ", ".join(rb.matched[:10]) or "(none)"))
+
+    if on_bullet:
+        on_bullet(offset + 1, total, chunk[0].bullet.id, "batch")
+    res = llm.complete(_BATCH_SYSTEM, "\n\n".join(lines),
+                       json_schema=_BATCH_SCHEMA,
+                       effort=cfg["llm"].get("reasoning_effort", "low"))
+    out.calls += 1
+    out.tokens_in += res.prompt_tokens
+    out.tokens_out += res.completion_tokens
+    got = {}
+    for it in json.loads(res.text).get("bullets") or []:
+        got.setdefault(str(it.get("id", "")).strip(), it.get("text") or "")
+
+    for n, (label, rb, mapping) in enumerate(items, start=offset + 1):
+        b = rb.bullet
+        raw = got.get(label)
+        outcome = _judge(b, raw, mapping, jd_keys, vocab, out)
+        if on_bullet:
+            on_bullet(n, total, b.id, outcome)
+
+
+def _judge(b, raw, mapping, jd_keys, vocab, out,
+           numbers_checked: bool = False) -> str:
+    """Check one returned line; record it as rewritten, rejected or skipped.
+
+    `numbers_checked=True` means the caller already verified and unmasked the
+    numbers (llm.rewrite_masked does), so only the quality checks remain.
+    """
+    if raw is None:
+        out.skipped.append((b.id, "not returned by the model"))
+        return "missing"
+    raw = raw.strip().strip('"').strip()
+    if not numbers_checked:
+        foreign = [k for k in _PLACEHOLDER.findall(raw) if k not in mapping]
+        if foreign:
+            out.skipped.append((b.id, "number guard: placeholder %s belongs "
+                                "to another bullet" % ", ".join(foreign)))
+            return "blocked"
+        from .llm import _NUM_RE
+        invented = _NUM_RE.findall(_PLACEHOLDER.sub("", raw))
+        if invented:
+            out.skipped.append((b.id, "number guard: model wrote digits %r"
+                                % invented[:3]))
+            return "blocked"
+        for key, val in mapping.items():
+            raw = raw.replace(key, val)
+    text = sanitise_latex(raw, b.text)
+    if not text:
+        out.skipped.append((b.id, "empty response"))
+        return "empty"
+    ok, why = accept_rewrite(b.text, text, jd_keys, vocab)
+    if not ok:
+        # Keep the candidate's own wording. A rejected rewrite is a normal
+        # outcome, not an error: the master resume is already decent prose.
+        out.rejected.append((b.id, why, text))
+        return "rejected"
+    out.rewritten[b.id] = text
+    return "kept"
+
+
+def _rewrite_single(rb, idx, total, jd_keys, llm, vocab, cfg, out,
+                    on_bullet) -> None:
+    """One bullet, one call - the fallback when a batch call fails."""
+    b = rb.bullet
+    if on_bullet:
+        on_bullet(idx, total, b.id, "start")
+    try:
+        res = llm.rewrite_masked(
+            _SYSTEM, _user_prompt(b.text, rb.matched),
+            effort=cfg["llm"].get("reasoning_effort", "low"))
+        out.calls += 1
+    except HallucinatedNumber as e:
+        # Hard block, never a silent fallback to the model's text.
+        out.calls += 1
+        out.skipped.append((b.id, "number guard: %s" % e))
+        if on_bullet:
+            on_bullet(idx, total, b.id, "blocked")
+        return
+    except LLMError as e:
+        out.skipped.append((b.id, "llm error: %s" % e))
+        if on_bullet:
+            on_bullet(idx, total, b.id, "error")
+        return
+    out.tokens_in += res.prompt_tokens
+    out.tokens_out += res.completion_tokens
+    # rewrite_masked already verified and unmasked the numbers.
+    outcome = _judge(b, res.text, {}, jd_keys, vocab, out,
+                     numbers_checked=True)
+    if on_bullet:
+        on_bullet(idx, total, b.id, outcome)
 
 
 _SUMMARY_SYSTEM = """You rewrite a resume summary paragraph for emphasis.

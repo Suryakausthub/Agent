@@ -55,7 +55,7 @@ flowchart LR
 
 1. **Analyse** — the model extracts structured requirements from the posting; code maps them to a skill vocabulary and computes the score.
 2. **Select** — code pre-ranks every project; the model reviews the full list, shortlists, then picks up to three bullets per chosen project. The model returns ids only, and code validates each one.
-3. **Rewrite** — each selected bullet is rephrased toward the job's terminology, using only the facts already in it.
+3. **Rewrite** — the selected bullets are rephrased toward the job's terminology in a single model call, each using only the facts already in it; every returned line is then checked on its own.
 4. **Verify** — every rewritten line is checked against your resume and project library before it can reach the page.
 5. **Fit** — the result is spliced into a copy of your `main.tex`, compiled, measured and trimmed to one page.
 6. **Approve** — you review the diff and the PDF; approval unlocks the download.
@@ -245,6 +245,7 @@ Get-NetTCPConnection -LocalPort 8000 -State Listen |
 .venv\Scripts\python backend\tests\t_pagefit.py    :: page-estimate calibration
 .venv\Scripts\python backend\tests\t_compile.py    :: Tectonic PDF, measured pages, trim, fallback
 .venv\Scripts\python backend\tests\t_kb.py         :: project records, selection, rendering, scoring
+.venv\Scripts\python backend\tests\t_batch.py      :: batched bullet rewriting and its per-line safeguards
 
 :: real model calls (a fraction of a cent each)
 .venv\Scripts\python backend\tests\t_llm.py        :: API key works, number masking

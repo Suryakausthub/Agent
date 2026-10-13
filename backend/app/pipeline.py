@@ -201,21 +201,25 @@ class Pipeline:
                       notes=p.notes)
 
         with Stage(job_id, "rewrite",
-                   "rewriting %d bullets, one model call each"
-                   % len(p.bullets)) as st:
+                   "rewriting %d bullets" % len(p.bullets)) as st:
             def _tick(i, n, bid, outcome):
-                broker.emit(job_id, "rewrite", "running",
-                            "bullet %d of %d - %s" % (i, n, bid),
+                detail = ("rewriting %d bullets in one call" % n
+                          if outcome == "batch" else
+                          "checking bullet %d of %d" % (i, n))
+                broker.emit(job_id, "rewrite", "running", detail,
                             index=i, total=n, bullet=bid, outcome=outcome)
 
             result = rewrite_bullets(p, jd, self.llm, self.vocab, self.cfg,
                                      on_bullet=_tick)
             st.finish("%d accepted, %d rejected by the quality gate, %d skipped"
+                      " (%d model call%s)"
                       % (len(result.rewritten), len(result.rejected),
-                         len(result.skipped)),
+                         len(result.skipped), result.calls,
+                         "" if result.calls == 1 else "s"),
                       status=WARN if result.skipped else OK,
                       accepted=len(result.rewritten),
                       rejected=[list(r) for r in result.rejected],
+                      calls=result.calls, warnings=result.warnings,
                       tokens_in=result.tokens_in, tokens_out=result.tokens_out)
 
         with Stage(job_id, "summary", "re-emphasising the summary") as st:
@@ -279,7 +283,8 @@ class Pipeline:
             "pages": outcome.pages,
             "measured": outcome.measured,
             "trim_actions": to_jsonable(outcome.actions),
-            "warnings": outcome.warnings,
+            "warnings": result.warnings + outcome.warnings,
+            "rewrite_calls": result.calls,
         })
         self.store.save_json(job_id, "diff_json", {
             "lines": to_jsonable(diff_lines),

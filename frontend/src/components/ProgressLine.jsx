@@ -44,7 +44,10 @@ function liveState(events, busy) {
     if (!e) continue;
     if (e.status === "running") {
       let frac = 0.25;
-      if (id === "rewrite" && e.data?.total) frac = (e.data.index - 0.5) / e.data.total;
+      if (id === "rewrite" && e.data?.total) {
+        // The batch call is the slow part; checking each returned line is fast.
+        frac = e.data.outcome === "batch" ? 0.4 : 0.6 + 0.4 * (e.data.index / e.data.total);
+      }
       pct += w * Math.max(0, Math.min(1, frac));
       current = { label, detail: e.detail, data: e.data, id };
     } else {
@@ -72,7 +75,9 @@ export default function ProgressLine({ job, busy }) {
     const c = live.current;
     const bullet =
       c?.id === "rewrite" && c.data?.total
-        ? `bullet ${c.data.index} of ${c.data.total}`
+        ? c.data.outcome === "batch"
+          ? `rewriting all ${c.data.total} bullets together`
+          : `checking bullet ${c.data.index} of ${c.data.total}`
         : null;
     return (
       <div className="card progress">

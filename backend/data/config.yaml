@@ -63,6 +63,12 @@ resume:
   min_font_pt: 11
   min_margin_in: 0.5
 
+tailoring:
+  # Bullets rewritten per model call. 20 covers a whole resume in ONE call;
+  # every returned line is still checked individually. 1 = one call per
+  # bullet (the old behaviour: slower and hits rate limits).
+  batch_size: 20
+
 # Project Knowledge Base (knowledge_base.py, project_select.py). Built once
 # per repository by scripts/build_knowledge_base.py; per job, the selector
 # ranks these together with the main.tex projects and takes at most
