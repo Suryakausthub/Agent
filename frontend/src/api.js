@@ -46,6 +46,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ status }),
     }),
+  setDetails: (id, details) =>
+    req(`/jobs/${id}/details`, {
+      method: "POST",
+      body: JSON.stringify(details),
+    }),
   setNotes: (id, notes) =>
     req(`/jobs/${id}/notes`, {
       method: "POST",
@@ -79,7 +84,7 @@ export const api = {
 
 // The UI version this build expects from the server (see API_VERSION in
 // backend/app/main.py). A lower one means the server predates the UI.
-export const REQUIRED_API = 3;
+export const REQUIRED_API = 4;
 
 /**
  * Download a file, checking it really is what we asked for.

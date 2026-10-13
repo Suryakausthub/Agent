@@ -20,6 +20,7 @@ const TABS = [
 
 export default function JobPage({ job, busy, run, notify, onBack, onDeleted }) {
   const [tab, setTab] = useState(job.diff_json ? "resume" : "overview");
+  const [editing, setEditing] = useState(false);
   const working = busy === "analyse" || busy === "tailor";
 
   // The single "what should I do next" action.
@@ -52,10 +53,16 @@ export default function JobPage({ job, busy, run, notify, onBack, onDeleted }) {
                 <Badge tone={band(job.match_score)}>{job.match_score}% match</Badge>
               )}
             </div>
-            <div className="sub ellip">
-              {job.title || "Role not detected yet"}
-              {job.location ? ` · ${job.location}` : ""}
-              {job.external_id ? ` · ${job.external_id}` : ""}
+            <div className="sub row" style={{ gap: 6, flexWrap: "nowrap" }}>
+              <span className="ellip">
+                {job.title || "Role not set"}
+                {job.location ? ` · ${job.location}` : ""}
+                {job.external_id ? ` · ${job.external_id}` : ""}
+              </span>
+              <button className="btn ghost sm" title="Edit company, role and location"
+                onClick={() => setEditing((e) => !e)} style={{ height: 24, padding: "0 6px" }}>
+                <Icon name="edit" size={13} />
+              </button>
             </div>
           </div>
         </div>
@@ -88,6 +95,11 @@ export default function JobPage({ job, busy, run, notify, onBack, onDeleted }) {
         </div>
       </div>
 
+      {(editing || (job.score_json && !working && (!job.title || !job.company))) && (
+        <DetailsForm job={job} run={run} onDone={() => setEditing(false)}
+          asked={!editing} />
+      )}
+
       <ProgressLine job={job} busy={busy} />
 
       <div className="tabs">
@@ -112,6 +124,60 @@ export default function JobPage({ job, busy, run, notify, onBack, onDeleted }) {
       {tab === "outreach" && <OutreachTab job={job} run={run} busy={busy} notify={notify} />}
       {tab === "checks" && <ChecksTab job={job} />}
       {tab === "activity" && <ActivityTab job={job} run={run} busy={busy} onDeleted={onDeleted} />}
+    </div>
+  );
+}
+
+/**
+ * Company / role / location. Shown unprompted when the analysis couldn't find
+ * them - extraction only keeps a title that actually appears in the posting,
+ * so a description pasted without its heading has none - and on demand via
+ * the pencil next to the title.
+ */
+function DetailsForm({ job, run, onDone, asked }) {
+  const [company, setCompany] = useState(job.company || "");
+  const [title, setTitle] = useState(job.title || "");
+  const [location, setLocation] = useState(job.location || "");
+  const missing = [!job.title && "role", !job.company && "company"].filter(Boolean);
+
+  async function save() {
+    await run("details", () => api.setDetails(job.id, { company, title, location }), "Details saved");
+    onDone();
+  }
+
+  return (
+    <div className={"alert " + (asked ? "warn" : "")} style={{ marginBottom: 20, display: "block" }}>
+      <div className="strong" style={{ marginBottom: 4 }}>
+        {asked
+          ? `The ${missing.join(" and ")} isn't in the description you pasted - add it`
+          : "Edit job details"}
+      </div>
+      {asked && (
+        <div className="xs muted" style={{ marginBottom: 12 }}>
+          It's used in your applications list, the PDF file name and your referral messages.
+        </div>
+      )}
+      <div className="grid cols-3" style={{ gap: 10, marginTop: asked ? 0 : 10 }}>
+        <div>
+          <label className="label">Role</label>
+          <input className="input" value={title} placeholder="e.g. Software Engineer"
+            onChange={(e) => setTitle(e.target.value)} autoFocus={!job.title} />
+        </div>
+        <div>
+          <label className="label">Company</label>
+          <input className="input" value={company} onChange={(e) => setCompany(e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Location <span className="subtle">(optional)</span></label>
+          <input className="input" value={location} onChange={(e) => setLocation(e.target.value)} />
+        </div>
+      </div>
+      <div className="row" style={{ marginTop: 12, justifyContent: "flex-end" }}>
+        {!asked && <button className="btn sm" onClick={onDone}>Cancel</button>}
+        <button className="btn primary sm" disabled={!title.trim() || !company.trim()} onClick={save}>
+          Save
+        </button>
+      </div>
     </div>
   );
 }

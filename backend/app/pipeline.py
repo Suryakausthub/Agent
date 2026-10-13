@@ -133,9 +133,13 @@ class Pipeline:
                       status=WARN if unresolved else OK,
                       unresolved=unresolved[:10])
 
+        # A field the extraction could not find in the text stays as the user
+        # entered it (POST /details) rather than being blanked on re-analysis.
         self.store.update(
-            job_id, company=jd.company, title=jd.title,
-            location=jd.location, external_id=jd.job_id)
+            job_id, company=jd.company or row.get("company") or "",
+            title=jd.title or row.get("title") or "",
+            location=jd.location or row.get("location") or "",
+            external_id=jd.job_id or row.get("external_id") or "")
 
         with Stage(job_id, "score", "comparing against your resume") as st:
             rep = score_resume(self.master, jd, self.vocab, self.cfg,

@@ -26,7 +26,7 @@ from .core.referral import EMAIL, FOLLOWUP, LINKEDIN, ReferralRequest, generate
 from .pipeline import Pipeline, to_jsonable
 from .progress import STAGES, broker
 
-API_VERSION = 3          # 3: PDF download/preview, library usage, all-project selection
+API_VERSION = 4          # 4: job details edit; 3: PDF, library usage, all-project selection
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 BACKEND = os.path.join(ROOT, "backend")
@@ -263,6 +263,38 @@ def set_status(job_id: str, req: StatusRequest) -> dict:
 def set_notes(job_id: str, req: NotesRequest) -> dict:
     pipeline.store.update(job_id, notes=req.notes)
     return {"ok": True}
+
+
+class DetailsRequest(BaseModel):
+    company: str | None = None
+    title: str | None = None
+    location: str | None = None
+
+
+@app.post("/api/jobs/{job_id}/details")
+def set_details(job_id: str, req: DetailsRequest) -> dict:
+    """Fill in or correct company / role / location.
+
+    Extraction only keeps a title that literally appears in the posting, so a
+    description pasted without its heading has no title. The user supplies
+    it here. The stored extraction is updated too, so a cached re-analysis
+    and the referral messages use the same values.
+    """
+    row = pipeline.store.get(job_id)
+    if row is None:
+        raise HTTPException(404, "no such job")
+    fields = {k: v.strip() for k, v in req.model_dump().items()
+              if v is not None}
+    if not fields:
+        return {"ok": True, "changed": []}
+    pipeline.store.update(job_id, **fields)
+    jd = pipeline.store.get_json(job_id, "jd_json")
+    if jd is not None:
+        jd.update(fields)
+        pipeline.store.save_json(job_id, "jd_json", jd)
+    pipeline.store.log(job_id, "details_edited",
+                       ", ".join("%s=%s" % kv for kv in fields.items()))
+    return {"ok": True, "changed": sorted(fields)}
 
 
 @app.delete("/api/jobs/{job_id}")
