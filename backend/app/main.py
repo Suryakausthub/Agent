@@ -197,11 +197,35 @@ def download_tex(job_id: str) -> PlainTextResponse:
                       'attachment; filename="%s.tex"' % _resume_name(job_id)})
 
 
+_LEGAL = re.compile(
+    r"\b(inc|incorporated|llc|llp|ltd|limited|pvt|private|plc|corp|corporation|"
+    r"co|company|gmbh|ag|sa|bv|india|technologies|technology|solutions|services|"
+    r"group|holdings|platforms|systems)\b\.?", re.I)
+
+
+def short_company(company: str) -> str:
+    """The name people use for the company, for file names.
+
+    'Deloitte Touche Tohmatsu India LLP' -> 'Deloitte', 'Zenovo Inc' ->
+    'Zenovo', 'Postman (Postdot Technologies ...)' -> 'Postman',
+    'Goldman Sachs' -> 'Goldman Sachs'. Legal suffixes and parentheticals are
+    dropped; a name still longer than two words keeps its first word.
+    """
+    name = re.sub(r"\(.*?\)", " ", company or "")
+    name = _LEGAL.sub(" ", name)
+    words = [w for w in re.split(r"[\s,&]+", name) if w]
+    if len(words) > 2:
+        words = words[:1]
+    return " ".join(words)
+
+
 def _resume_name(job_id: str) -> str:
-    """'A_Surya_Kausthub_Resume_Acme_Systems' -- what a recruiter sees."""
+    """'Surya_Kausthub_Deloitte_Resume' - the agreed convention:
+    <file name>_<Company>_Resume, underscores, no version or date suffixes."""
     row = pipeline.store.get(job_id) or {}
-    name = pipeline.cfg.get("candidate", {}).get("name", "Resume")
-    parts = [name, "Resume", row.get("company") or ""]
+    cand = pipeline.cfg.get("candidate", {})
+    person = cand.get("file_name") or cand.get("name", "")
+    parts = [person, short_company(row.get("company") or ""), "Resume"]
     slug = "_".join(p for p in parts if p)
     return re.sub(r"[^A-Za-z0-9]+", "_", slug).strip("_") or "Resume"
 

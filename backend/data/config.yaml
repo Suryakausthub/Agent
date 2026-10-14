@@ -121,6 +121,9 @@ paths:
 # application. Used to sign off referral messages.
 candidate:
   name: "A. Surya Kausthub"
+  # Downloaded files are named <file_name>_<Company>_Resume.pdf
+  # e.g. Surya_Kausthub_Deloitte_Resume.pdf
+  file_name: "Surya_Kausthub"
   email: "kausthubsurya@gmail.com"
   standing: "B.Tech Computer Science graduate (2026)"
   linkedin: "https://www.linkedin.com/in/surya-kausthub-85352b274/"
