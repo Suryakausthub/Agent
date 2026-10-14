@@ -246,6 +246,13 @@ Get-NetTCPConnection -LocalPort 8000 -State Listen |
 ## Tests
 
 ```cmd
+.venv\Scripts\python -m pytest          :: offline suite - free, about 25 seconds
+.venv\Scripts\python -m pytest --live   :: also the model and live job-board tests
+```
+
+Each check is also a readable script you can run on its own to see what it verifies:
+
+```cmd
 :: offline
 .venv\Scripts\python backend\tests\t_parse.py      :: LaTeX parser against main.tex
 .venv\Scripts\python backend\tests\t_vocab.py      :: skill extraction and implications
@@ -269,7 +276,7 @@ Get-NetTCPConnection -LocalPort 8000 -State Listen |
 .venv\Scripts\python backend\tests\t_fetch.py      :: Greenhouse / Lever / Ashby links, closed postings
 ```
 
-`t_api`, `t_paste` and `t_live` create applications in your local database — delete them afterwards, or back up `job_agent.db` first. Leave about a minute between model-backed tests to stay within Groq's free-tier limit.
+`t_api`, `t_paste` and `t_live` create applications in your local database, so pytest never runs them — run them by hand, then delete the test applications (or back up `job_agent.db` first). Leave about a minute between model-backed tests to stay within Groq's free-tier limit.
 
 ## Known limitations
 

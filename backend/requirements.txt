@@ -6,3 +6,6 @@ pyyaml==6.0.2
 openai==1.59.6
 httpx==0.28.1
 selectolax==0.3.27
+
+# tests: run `pytest` (offline) or `pytest --live`
+pytest==8.3.4
