@@ -162,6 +162,25 @@ export default function ResumeTab({ job, run, busy, notify }) {
           </div>
         )}
 
+        {t?.skills_added?.length > 0 && (
+          <div className="card">
+            <div className="card-head">
+              <h3>Added to your Skills section</h3>
+              <span className="xs muted">asked for by this job, proven by a project on the page</span>
+            </div>
+            <div className="card-body" style={{ paddingTop: 4, paddingBottom: 4 }}>
+              {t.skills_added.map((s, i) => (
+                <div key={i} className="proj" style={{ alignItems: "center" }}>
+                  <span className="chip ok">{s.skill}</span>
+                  <span className="sm muted">
+                    on your <strong>{s.line}</strong> line · proven by {s.proven_by}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="card">
           <div className="card-head">
             <h3>Changes</h3>

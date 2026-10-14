@@ -43,6 +43,10 @@ class TailorPlan:
     skill_order: list[str] = field(default_factory=list)      # skill line ids
     bullets: list[RankedBullet] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    # Skills a GitHub project on the page proves, that the job asks for and
+    # the Skills section lacks: (skill line id, display name, project entry
+    # id). Rendered only while that project is still on the page.
+    skill_additions: list[tuple[str, str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -126,6 +130,13 @@ def plan(resume: Resume, jd: JobDescription, vocab: Vocabulary,
     line_scores.sort(key=lambda t: -t[0])
     p.skill_order = [lid for _, lid in line_scores]
 
+    if selection is not None and cfg.get("tailoring", {}).get("add_proven_skills", True):
+        p.skill_additions = _proven_skill_additions(
+            resume, jd, vocab, selection, p.projects_kept,
+            cfg.get("tailoring", {}).get("max_added_skills", 4))
+        for line_id, name, src in p.skill_additions:
+            p.notes.append("skill added: %s -> %s (proven by %s)" % (name, line_id, src))
+
     # Bullets in scope for rewriting: experience always, plus kept projects.
     for e in resume.experience + p.projects_kept:
         for b in e.bullets:
@@ -133,6 +144,55 @@ def plan(resume: Resume, jd: JobDescription, vocab: Vocabulary,
             p.bullets.append(RankedBullet(bullet=b, entry_id=e.id,
                                           score=s, matched=matched))
     return p
+
+
+def _proven_skill_additions(resume: Resume, jd: JobDescription,
+                            vocab: Vocabulary, selection, kept: list[Entry],
+                            limit: int) -> list[tuple[str, str, str]]:
+    """Skills to add to the Skills section: asked for by the job, missing from
+    the Skills section, and proven by a GitHub project that is on the page.
+
+    Applicant-tracking systems weight the Skills section most, so a skill that
+    only appears inside a project bullet is easily missed. Nothing here is new
+    information: each skill is in a project's tech stack that was verified
+    against its repository when the project library was built.
+    """
+    if not resume.skills or limit <= 0:
+        return []
+    have = set()
+    for line in resume.skills:
+        have |= set(vocab.extract(", ".join(line.items)))
+    # How often the job asks for each skill - most-demanded first.
+    demand: dict[str, int] = {}
+    for r in jd.requirements:
+        for k in r.keys:
+            demand[k] = demand.get(k, 0) + (2 if r.kind == "required" else 1)
+
+    on_page = [e for e in kept if e.origin == "bank"]
+    candidates: dict[str, str] = {}
+    for e in on_page:
+        for k in selection.proven_skills.get(e.id, []):
+            if k in demand and k not in have and k not in candidates:
+                candidates[k] = e.id
+    picked = sorted(candidates, key=lambda k: (-demand[k], vocab.canonical(k)))[:limit]
+
+    # Put each skill on the line that already holds skills of its kind
+    # (MongoDB beside PostgreSQL); otherwise on the line named for it.
+    line_cats = []
+    for line in resume.skills:
+        cats = [vocab.category(k) for k in vocab.extract(", ".join(line.items))]
+        line_cats.append((line, cats))
+    out = []
+    for k in picked:
+        cat = vocab.category(k)
+        best = max(line_cats, key=lambda lc: (
+            lc[1].count(cat),
+            cat in lc[0].category.lower(),
+            -resume.skills.index(lc[0])))
+        line = best[0] if best[1].count(cat) or cat in best[0].category.lower() \
+            else resume.skills[-1]
+        out.append((line.id, vocab.canonical(k), candidates[k]))
+    return out
 
 
 # --------------------------------------------------------------------- step B

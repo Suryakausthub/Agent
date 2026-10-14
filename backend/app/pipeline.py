@@ -33,6 +33,7 @@ from .core.project_select import select as select_projects
 from .core.tailor import plan as plan_tailor
 from .core.tailor import rewrite as rewrite_bullets
 from .core.tailor import rewrite_summary
+from .core.render import skill_additions_in_effect
 from .core.trim import fit_to_pages
 from .core.vocabulary import Vocabulary
 from .core.whitelist import Whitelist, build_diff
@@ -277,6 +278,7 @@ class Pipeline:
             "projects_kept": [e.id for e in p.projects_kept],
             "projects_dropped": [e.id for e in p.projects_dropped],
             "skill_order": p.skill_order,
+            "skills_added": self._skills_added(p),
             "skipped": result.skipped,
             "rejected": result.rejected,
             "summary_rewritten": bool(summary_text),
@@ -323,6 +325,16 @@ class Pipeline:
             "summary": {"rewritten": bool(summary_text),
                         "reason": summary_reason, "text": summary_text},
         }
+
+    def _skills_added(self, p) -> list[dict]:
+        """Skills that reached the page, with the line and the project that
+        proves each - shown on the Resume tab."""
+        in_effect = skill_additions_in_effect(p)
+        lines = {s.id: s.category for s in self.master.skills}
+        kept = {e.id: e.title for e in p.projects_kept}
+        return [{"skill": name, "line": lines.get(lid, lid), "proven_by": kept[src]}
+                for lid, name, src in p.skill_additions
+                if name in in_effect.get(lid, []) and src in kept]
 
     def release(self, job_id: str) -> tuple[bool, str, str]:
         """Return (allowed, reason, tex). Enforces the spec 17 gate."""

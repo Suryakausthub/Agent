@@ -31,6 +31,7 @@ It runs locally: a FastAPI backend and a React UI served from one process, with 
 - **Project library from your GitHub.** Every repository is analysed once into a structured record: what it does, architecture, a tech stack verified against the code, what is implemented versus planned, and ten candidate resume bullets.
 - **Picks your best projects for each job.** The model reviews *all* your projects (from your resume and GitHub), shortlists the ones that genuinely fit, and chooses at most three distinct bullets per project.
 - **Tailored rewriting.** Bullets are rewritten toward the job's wording without adding anything new; a rewrite that loses a skill or a metric is rejected and your original kept.
+- **Skills section that matches the job.** When a GitHub project on the page proves a skill the job asks for (say MongoDB) and your Skills section lacks it, it is added to the fitting line — and removed again if that project is trimmed off.
 - **Real one-page PDF.** The tailored LaTeX is compiled with Tectonic and the page count is measured. If it overflows, a fixed trim order cuts the least relevant content — never the font size or margins.
 - **Review before release.** A line-by-line diff against your original, a live PDF preview (watermarked *DRAFT* until approved), then **Download PDF** or `.tex`.
 - **Live progress.** One progress line shows the current stage and percentage while a job runs, counting through bullet rewrites one by one.
@@ -69,7 +70,7 @@ Resume tools fail when they invent experience. Job Agent is built so that the mo
 | Extract, then rewrite | Code decides what goes on the page; the model only rephrases text it is given, one bullet at a time. |
 | Number masking | Numbers are replaced with placeholders before every model call. Any digit the model writes itself is rejected. |
 | Claim whitelist | Every technology named in the output must already appear in your resume or project library — otherwise the resume is blocked. |
-| Verified project records | When the library is built, technologies not found in the repository are dropped, bullets naming them are rejected, and metrics must trace to the repository. |
+| Verified project records | When the library is built, technologies not found in the repository are dropped, bullets naming them are rejected, and metrics must trace to the repository. Bullets claiming an artefact — a Dockerfile, tests, CI, Kubernetes, a cloud deployment — are rejected unless the repository actually contains it. |
 | Authorship check | Forks, downloaded archives and code owned by someone else are kept off your resume until you confirm they are yours. |
 | Two-gate release | Downloads require the automated checks to pass **and** your approval. Approval is tied to the exact content, so re-tailoring revokes it. |
 
@@ -150,6 +151,12 @@ Three one-time steps, run from the project root. Each is safe to re-run and skip
 ```
 
 Each record holds the project's description and the problem it solves, architecture and components, a categorised tech stack checked against the code, implementation details marked *implemented / partial / planned*, key contributions, **ten candidate resume bullets** with the files that support them, keywords, and any **gaps** the evidence could not settle.
+
+To re-check existing records against the latest verification rules (no model calls; shows what would change, then `--apply`):
+
+```cmd
+.venv\Scripts\python backend\scripts\recheck_knowledge_base.py
+```
 
 To pick up repositories you have pushed to since, run:
 
@@ -246,6 +253,7 @@ Get-NetTCPConnection -LocalPort 8000 -State Listen |
 .venv\Scripts\python backend\tests\t_compile.py    :: Tectonic PDF, measured pages, trim, fallback
 .venv\Scripts\python backend\tests\t_kb.py         :: project records, selection, rendering, scoring
 .venv\Scripts\python backend\tests\t_batch.py      :: batched bullet rewriting and its per-line safeguards
+.venv\Scripts\python backend\tests\t_skills.py     :: proven skills on the Skills section, artefact checks
 
 :: real model calls (a fraction of a cent each)
 .venv\Scripts\python backend\tests\t_llm.py        :: API key works, number masking

@@ -99,8 +99,11 @@ def build_edits(resume: Resume, plan: TailorPlan,
         if ordered:
             first = min(s.span.start for s in resume.skills)
             last = max(s.span.end for s in resume.skills)
+            extra = skill_additions_in_effect(plan)
             block = "\n\n".join(
-                resume.source[s.span.start:s.span.end].strip() for s in ordered)
+                _with_skills(resume.source[s.span.start:s.span.end].strip(),
+                             extra.get(s.id, []))
+                for s in ordered)
             edits.append(Edit(start=first, end=last,
                               replacement=block + "\n\n",
                               kind="skills", ref="skills"))
@@ -167,6 +170,27 @@ def _projects_region(resume: Resume, plan: TailorPlan,
         blocks.append(_apply(resume.source[lo:hi], local).strip())
     return Edit(start=start, end=end, replacement="\n\n".join(blocks),
                 kind="projects", ref="projects")
+
+
+def skill_additions_in_effect(plan: TailorPlan) -> dict[str, list[str]]:
+    """Added skills whose proving project is still on the page, by line id.
+
+    If the trim loop removes a GitHub project, the skills it proved come off
+    the Skills section with it.
+    """
+    on_page = {e.id for e in plan.projects_kept}
+    out: dict[str, list[str]] = {}
+    for line_id, name, src in plan.skill_additions:
+        if src in on_page and name not in out.get(line_id, []):
+            out.setdefault(line_id, []).append(name)
+    return out
+
+
+def _with_skills(line_tex: str, names: list[str]) -> str:
+    if not names:
+        return line_tex
+    return line_tex.rstrip().rstrip(",") + ", " + ", ".join(
+        sanitise_latex(n, "") for n in names)
 
 
 def render(resume: Resume, plan: TailorPlan, result: TailorResult) -> RenderResult:

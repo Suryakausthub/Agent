@@ -51,6 +51,8 @@ class Selection:
     method: str = "code"                                   # model | code
     notes: list[str] = field(default_factory=list)
     bank_evidence: str = ""        # text of the bank projects that were used
+    # entry id -> vocabulary keys in that GitHub project's verified tech stack
+    proven_skills: dict[str, list[str]] = field(default_factory=dict)
     tokens_in: int = 0
     tokens_out: int = 0
     considered: int = 0            # projects the model saw in pass 1
@@ -396,6 +398,10 @@ def select(resume: Resume, bank_rows: list[dict], jd: JobDescription,
     for c, _ in picks:
         if c.origin == "bank" and c.record:
             bank_text.append(context_text(c.record))
+            # Skills this project PROVES: its tech stack was verified against
+            # the repository when the record was built.
+            sel.proven_skills[c.entry.id] = sorted(
+                set(vocab.extract(" , ".join(all_tech(c.record)))))
     sel.bank_evidence = "\n".join(bank_text)
 
     for e in sel.kept:
