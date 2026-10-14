@@ -369,6 +369,19 @@ class Store:
              relevance_text, now(), now(), project_id))
         self.con.commit()
 
+    def update_knowledge_record(self, project_id: str, record: dict,
+                                relevance_text: str) -> None:
+        """Store a corrected record WITHOUT resetting its review.
+
+        For removals only (a re-check dropping an unsupported bullet): taking
+        a claim away cannot invalidate the human's earlier decision, whereas
+        new or reworded text must go through save_knowledge_record.
+        """
+        self.con.execute(
+            "UPDATE projects SET project_json=?, relevance_text=?, updated_at=? "
+            "WHERE id=?", (_dumps(record), relevance_text, now(), project_id))
+        self.con.commit()
+
     def knowledge_base(self, require_approval: bool = True) -> list[dict]:
         """Knowledge-base records eligible for resume generation.
 

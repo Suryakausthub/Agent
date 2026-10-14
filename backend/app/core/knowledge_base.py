@@ -320,6 +320,49 @@ class Evidence:
         return list(dict.fromkeys(out))
 
 
+# Artefact claims: things a bullet says EXIST in the repository (a Dockerfile,
+# a test suite, a CI pipeline...). The term check above only asks whether the
+# word appears anywhere, so "Containerized each service with dedicated
+# Dockerfiles" passed for a repo whose docker-compose merely names images -
+# there was no Dockerfile at all. These rules ask for the artefact itself.
+_TEST_PATH = re.compile(r"(^|/)(tests?|spec|__tests__)/|(^|/)test_[^/]+$|_test\.[a-z]+$|\.(test|spec)\.[a-z]+$", re.I)
+
+_ARTEFACTS = [
+    (re.compile(r"\bdockerfiles?\b", re.I), "a Dockerfile",
+     lambda ev, paths, flat: any(p.rsplit("/", 1)[-1].startswith("dockerfile") for p in paths)),
+    # Packaging claims only. A bare "Docker" can describe what the program
+    # does ("runs external Docker commands"), which the term check covers.
+    (re.compile(r"\b(containeri[sz]ed|containeri[sz]ation|dockeri[sz]ed|docker images?|docker[- ]compose)\b", re.I),
+     "Docker files",
+     lambda ev, paths, flat: bool(ev.get("has_docker"))),
+    (re.compile(r"\b(unit|integration|end[- ]to[- ]end|e2e)[- ]tests?\b|\btest suites?\b|\bpytest\b|\bjunit\b|\bgoogletest\b|\btesting library\b", re.I),
+     "test files",
+     lambda ev, paths, flat: bool(ev.get("has_tests")) or any(_TEST_PATH.search(p) for p in paths)),
+    (re.compile(r"\bci/cd\b|\bci\b|\bgithub actions\b|\bjenkins\b|\bcontinuous integration\b", re.I), "a CI configuration",
+     lambda ev, paths, flat: bool(ev.get("has_ci"))),
+    (re.compile(r"\b(kubernetes|k8s|helm)\b", re.I), "Kubernetes manifests",
+     lambda ev, paths, flat: bool(re.search(r"\b(kubernetes|k8s|helm|kind:\s*deployment)\b", flat))),
+    (re.compile(r"\bmakefiles?\b", re.I), "a Makefile",
+     lambda ev, paths, flat: any(p.rsplit("/", 1)[-1] == "makefile" for p in paths)),
+]
+_CLOUD = re.compile(r"\b(?:deployed|hosted|running)\s+(?:\w+\s+){0,3}?(?:on|to)\s+(aws|gcp|google cloud|azure|heroku|vercel|netlify|render)\b", re.I)
+
+
+def artefact_problems(text: str, ev: dict) -> list[str]:
+    """Artefacts a bullet claims that the repository does not contain."""
+    paths = [(f.get("path") or "").lower() for f in ev.get("files") or []]
+    paths += [d.lower() for d in ev.get("dir_summary") or []]
+    flat = _corpus(ev).lower()
+    out = []
+    for pattern, what, present in _ARTEFACTS:
+        if pattern.search(text) and not present(ev, paths, flat):
+            out.append("claims %s, but the repository has none" % what)
+    for m in _CLOUD.finditer(text):
+        if m.group(1).lower() not in flat:
+            out.append("claims deployment to %s, which the repository never mentions" % m.group(1))
+    return out
+
+
 # A standalone number: not part of an identifier such as IPv6, S3, OAuth2,
 # Log4j or HTTP/2. Those are names, not claims.
 _NUMBER = re.compile(r"(?<![A-Za-z0-9_/.\-])\d[\d,]*(?:\.\d+)?")
@@ -481,6 +524,10 @@ def build_record(ev: dict, row: dict, llm: LLM, vocab: Vocabulary,
         if unknown:
             rejected.append({"text": text, "why": "names technology not in "
                              "the repository: %s" % ", ".join(unknown)})
+            continue
+        missing = artefact_problems(text, ev)
+        if missing:
+            rejected.append({"text": text, "why": "; ".join(missing)})
             continue
         dup = next((k for k in bullets if _similar(k["text"], text) >= 0.6), None)
         if dup:
